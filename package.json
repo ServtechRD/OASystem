@@ -1,0 +1,18 @@
+{
+  "name": "oasystem-project",
+  "version": "1.0.0",
+  "description": "oa system React frontend and FastAPI backend",
+  "scripts": {
+    "start-frontend": "cd fronted/oasystem && npm start",
+    "build-frontend": "cd fronted/oasystem && npm run build",
+    "start-backend": "bash ./scripts/start_server.sh",
+    "stop-backend": "bash ./scripts/stop_server.sh",
+    "start": "concurrently \"npm run start-frontend\" \"npm run start-backend\"",
+    "stop": "npm run stop-backend",
+    "restart": "npm run stop && npm run start",
+    "build": "npm run build-frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^7.0.0"
+  }
+}

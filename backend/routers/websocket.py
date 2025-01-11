@@ -9,11 +9,18 @@ from datetime import datetime
 import re
 import json
 
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 router = APIRouter()
 
 
+openapikey=os.getenv("OPENAI_API_KEY")
 
-client = OpenAI(api_key="sk-zGnmwbeloHDkR-tW5IwRxIVrgKyx3NK19vljUtHc1QT3BlbkFJJmHH-YN9sLBQCxClDWpseafWtfLa4QuG4SUsVaGPgA")
+client = OpenAI(api_key=openapikey)
 
 
 history = [

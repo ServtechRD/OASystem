@@ -4,6 +4,7 @@
 VENV_PATH="/home/oa/backend/venv"
 SERVER_PATH="/home/oa/backend"
 PID_FILE="/home/oa/scripts/uvicorn.pid"
+LOG_PATH="/home/oa/backend/log_config.yaml"
 
 # 激活虚拟环境
 if [ -d "$VENV_PATH" ]; then
@@ -23,7 +24,7 @@ fi
 cd $SERVER_PATH
 
 # 启动 Uvicorn
-uvicorn main:app --host 0.0.0.0 --port 39000 &
+uvicorn main:app --host 0.0.0.0 --port 39200 --log-config  $LOG_PATH &
 echo $! > "$PID_FILE"
 echo "Uvicorn started (PID: $!)"
 

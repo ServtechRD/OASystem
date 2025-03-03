@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum, ForeignKey,Date, DateTime, Time, Text
+from sqlalchemy import Column, Integer, String, Enum, ForeignKey, Date, DateTime, Time, Text, DECIMAL
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -44,6 +44,7 @@ class LeaveRecord(Base):
     end_datetime = Column(DateTime, nullable=False)
     status = Column(Enum("draft","requested", "approved", "cancelled","deleted"), default="draft")
     note = Column(Text)
+    total_hours = Column(DECIMAL(5, 2), default=0)  # 实际请假小时数（新增字段）
 
 class WorkSchedule(Base):
     __tablename__ = "work_schedules"

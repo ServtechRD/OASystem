@@ -24,18 +24,6 @@ const Dashboard = () => {
       <Sidebar />
 
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        {/* 添加登出按钮在右上角 */}
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-          <Button
-            variant="contained"
-            color="error"
-            startIcon={<LogoutIcon />}
-            onClick={handleLogout}
-          >
-            登出
-          </Button>
-        </Box>
-
         <Switch>
           <Route exact path="/" component={AttendanceSystem} />
           <Route path="/employees" component={EmployeeManagement} />

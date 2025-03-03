@@ -8,7 +8,7 @@ formatters:
 handlers:
   file:
     class: logging.handlers.TimedRotatingFileHandler
-    filename: ..\logs\oaserver.log
+    filename: ../logs/oaserver.log
     when: midnight  # 每天午夜轮换
     interval: 1  # 每 1 天轮换一次
     backupCount: 7  # 只保留最近 7 天的日志

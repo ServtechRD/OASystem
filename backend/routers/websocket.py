@@ -183,7 +183,11 @@ async def generate_subleave_summary(leave_records):
     ]
     records_text = "\n".join(leave_summary)
 
+    records_text + "是否同意?"
+
+    return records_text
     # 使用 GPT 将数据转换为自然语言
+    '''
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -194,6 +198,7 @@ async def generate_subleave_summary(leave_records):
     )
 
     return response.choices[0].message.content
+    '''
 
 
 # 使用 GPT 生成请假记录摘要

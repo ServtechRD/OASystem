@@ -1,7 +1,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from openai import OpenAI
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
+from sqlalchemy import and_, select
 from database import get_db
 from models import LeaveRecord, Employee, EmployeeSupervisor
 from utils import verify_access_token
@@ -140,45 +140,31 @@ def approve_all_leave_requests(supervisor_id: str, db: Session):
     批量批准该主管的所有待审批请假请求 (status="requested" -> "approved")
     """
     # 找出该主管管理的所有员工
-    subordinates = (
-        db.query(EmployeeSupervisor.emp_id)
-        .filter(EmployeeSupervisor.supervisor_id == supervisor_id)
-        .subquery()
-    )
+    subordinates_query = select(EmployeeSupervisor.emp_id).filter(EmployeeSupervisor.supervisor_id == supervisor_id)
 
-    # 查找所有 "requested" 状态的请假记录
-    leave_requests = (
+    # 直接批量更新数据库
+    updated_rows = (
         db.query(LeaveRecord)
-        .filter(and_(LeaveRecord.emp_id.in_(subordinates), LeaveRecord.status == "requested"))
-        .all()
+        .filter(and_(LeaveRecord.emp_id.in_(subordinates_query), LeaveRecord.status == "requested"))
+        .update({"status": "approved"}, synchronize_session=False)
     )
 
-    if not leave_requests:
-        return "沒有待審核請假記錄"
+    db.commit()
 
-    # 批量修改状态为 "approved"
-    for leave in leave_requests:
-        leave.status = "approved"
-
-    db.commit()  # 提交更改
-    return f"已核淮{len(leave_requests)} 條請假記錄"
+    return f"已核淮請假記錄"
 
 
 def get_pending_leave_requests(supervisor_id: str, db: Session):
     """
     查询所有属于 supervisor_id 主管的员工，并且 status="requested" 的请假记录
     """
-    # 找出当前主管管理的员工
-    subordinates = (
-        db.query(EmployeeSupervisor.emp_id)
-        .filter(EmployeeSupervisor.supervisor_id == supervisor_id)
-        .subquery()
-    )
+    # 找出该主管管理的所有员工
+    subordinates_query = select(EmployeeSupervisor.emp_id).filter(EmployeeSupervisor.supervisor_id == supervisor_id)
 
-    # 查询这些员工的请假记录，且状态为 "requested"
+    # 查询请假记录
     leave_requests = (
         db.query(LeaveRecord)
-        .filter(and_(LeaveRecord.emp_id.in_(subordinates), LeaveRecord.status == "requested"))
+        .filter(and_(LeaveRecord.emp_id.in_(subordinates_query), LeaveRecord.status == "requested"))
         .all()
     )
 

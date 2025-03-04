@@ -94,7 +94,7 @@ const AttendanceSystem = () => {
     const start = new Date(startTime);
     const end = new Date(endTime);
     const hours = (end - start) / (1000 * 60 * 60);
-    return hours / 8;
+    return hours / 9;
   };
 
   // 統計請假記錄

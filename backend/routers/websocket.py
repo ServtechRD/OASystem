@@ -278,8 +278,8 @@ def check_missing_fields(data: dict):
 
 def check_error(data: dict):
     try:
-        st_dt = datetime.strptime(data["start_datetime"], "%Y-%m-%dT%H:%M:%S")
-        ed_dt = datetime.strptime(data["end_datetime"], "%Y-%m-%dT%H:%M:%S")
+        st_dt = datetime.strptime(data["start_datetime"], "%Y-%m-%d %H:%M")
+        ed_dt = datetime.strptime(data["end_datetime"], "%Y-%m-%d %H:%M")
 
         if st_dt > ed_dt:
             return f"請假開始時間必須早於結束時間"
@@ -297,7 +297,7 @@ def check_error(data: dict):
 
 
     except ValueError:
-        return f"日期格式錯誤，請使用 YYYY-MM-DDTHH:MM:SS 格式"
+        return f"日期格式錯誤，請使用 YYYY-MM-DD HH:MM 格式"
     return ""
 
 
@@ -325,8 +325,8 @@ def save_leave_record(data: dict, emp_id: str, db: Session):
     # 获取员工信息
     employee = db.query(Employee).filter(Employee.emp_id == emp_id).first()
     # 解析时间
-    start_datetime = datetime.strptime(data["start_datetime"], "%Y-%m-%dT%H:%M:%S")
-    end_datetime = datetime.strptime(data["end_datetime"], "%Y-%m-%dT%H:%M:%S")
+    start_datetime = datetime.strptime(data["start_datetime"], "%Y-%m-%d %H:%M")
+    end_datetime = datetime.strptime(data["end_datetime"], "%Y-%m-%d %H:%M")
 
     # 获取员工的上下班时间
     work_start_time = datetime.strptime(employee.work_start_time, "%H:%M").time()

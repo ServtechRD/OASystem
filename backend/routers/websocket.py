@@ -6,14 +6,13 @@ from database import get_db
 from models import LeaveRecord, Employee, EmployeeSupervisor
 from utils import verify_access_token
 from typing import Optional
-from datetime import datetime
 import re
 import json
 import holidays
 import os
 
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta  
 
 load_dotenv()
 

@@ -55,6 +55,13 @@ const AttendanceSystem = () => {
   useEffect(() => {
     wsRef.current = createWebSocket("/ws/leave"); //new WebSocket('ws://192.168.1.234:39200/ws/leave');
 
+    // 添加onopen事件处理器，等待连接成功
+    wsRef.current.onopen = () => {
+      console.log("WebSocket连接已建立");
+      // 连接成功后再调用handleSendStart
+      handleSendStart();
+    };
+
     wsRef.current.onmessage = (event) => {
       console.log(event);
 
@@ -70,8 +77,6 @@ const AttendanceSystem = () => {
       setIsLoading(false);
       scrollToBottom();
     };
-
-    handleSendStart();
 
     return () => {
       if (wsRef.current) {

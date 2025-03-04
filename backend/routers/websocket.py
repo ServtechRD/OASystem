@@ -85,32 +85,32 @@ async def leave_websocket(websocket: WebSocket, db: Session = Depends(get_db)):
                     await websocket.send_text("下屬請假申請:")
                     response = await generate_leave_summary(leave_records)
                     await websocket.send_text(response)
-
-            if "查詢" in user_input and "請假" in user_input:
-                # 查询已请假记录
-                leave_records = query_leave_records(emp_id, db)
-                if not leave_records:
-                    await websocket.send_text("您目前尚未有任何請假記錄。")
-                else:
-                    # 使用 GPT 生成自然语言回复
-                    response = await generate_leave_summary(leave_records)
-                    await websocket.send_text(response)
-            elif "確認" in user_input and "請假" in user_input:
-                if emp_id in user_confirm and len(user_confirm[emp_id]) > 0:
-                    save_leave_record(user_confirm[emp_id], emp_id, db)
-                    msg = generate_confirmation_message(user_confirm[emp_id])
-                    await websocket.send_text(f"已提出請假申請\n {msg}")
-                    user_confirm[emp_id] = {}
-                else:
-                    await websocket.send_text("您目前尚無要確認的請假")
-            elif "同意" in user_input and "請假" in user_input:
-                if len(reqlist) > 0:
-                    msg = approve_all_leave_requests(emp_id, db)
-                    await websocket.send_text(msg)
             else:
-                # 处理请假申请或其他逻辑
-                response = await process_leave_request(user_input, emp_id, db)
-                await websocket.send_text(response)
+                if "查詢" in user_input and "請假" in user_input:
+                    # 查询已请假记录
+                    leave_records = query_leave_records(emp_id, db)
+                    if not leave_records:
+                        await websocket.send_text("您目前尚未有任何請假記錄。")
+                    else:
+                        # 使用 GPT 生成自然语言回复
+                        response = await generate_leave_summary(leave_records)
+                        await websocket.send_text(response)
+                elif "確認" in user_input and "請假" in user_input:
+                    if emp_id in user_confirm and len(user_confirm[emp_id]) > 0:
+                        save_leave_record(user_confirm[emp_id], emp_id, db)
+                        msg = generate_confirmation_message(user_confirm[emp_id])
+                        await websocket.send_text(f"已提出請假申請\n {msg}")
+                        user_confirm[emp_id] = {}
+                    else:
+                        await websocket.send_text("您目前尚無要確認的請假")
+                elif "同意" in user_input and "請假" in user_input:
+                    if len(reqlist) > 0:
+                        msg = approve_all_leave_requests(emp_id, db)
+                        await websocket.send_text(msg)
+                else:
+                    # 处理请假申请或其他逻辑
+                    response = await process_leave_request(user_input, emp_id, db)
+                    await websocket.send_text(response)
 
             # Process natural language with GPT
             # response = await process_with_gpt(data, user_data)

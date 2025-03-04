@@ -106,6 +106,7 @@ async def leave_websocket(websocket: WebSocket, db: Session = Depends(get_db)):
                     else:
                         await websocket.send_text("您目前尚無要確認的請假")
                 elif "同意" in user_input and "請假" in user_input:
+                    reqlist = get_pending_leave_requests(emp_id, db)
                     if len(reqlist) > 0:
                         msg = approve_all_leave_requests(emp_id, db)
                         await websocket.send_text(msg)

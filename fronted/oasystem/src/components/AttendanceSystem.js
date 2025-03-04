@@ -54,7 +54,6 @@ const AttendanceSystem = () => {
 
   useEffect(() => {
     wsRef.current = createWebSocket("/ws/leave"); //new WebSocket('ws://192.168.1.234:39200/ws/leave');
-    handleSendStart();
 
     wsRef.current.onmessage = (event) => {
       console.log(event);
@@ -71,6 +70,8 @@ const AttendanceSystem = () => {
       setIsLoading(false);
       scrollToBottom();
     };
+
+    handleSendStart();
 
     return () => {
       if (wsRef.current) {

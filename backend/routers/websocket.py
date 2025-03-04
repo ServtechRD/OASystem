@@ -176,6 +176,26 @@ def query_leave_records(emp_id: str, db: Session):
     return db.query(LeaveRecord).filter(LeaveRecord.emp_id == emp_id).all()
 
 
+async def generate_subleave_summary(leave_records):
+    leave_summary = [
+        f"{record.emp_id} 請{record.leave_type}假，從 {record.start_datetime} 到 {record.end_datetime} 狀態 {record.status}"
+        for record in leave_records
+    ]
+    records_text = "\n".join(leave_summary)
+
+    # 使用 GPT 将数据转换为自然语言
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system",
+             "content": "你是一個請假記錄助手，負責根據用戶的下屬請假記錄生成表格摘要，詢問是否允許，並以自然語言返回。"},
+            {"role": "assistant", "content": f"以下是用戶的的下屬請假記錄：\n{records_text}"},
+        ]
+    )
+
+    return response.choices[0].message.content
+
+
 # 使用 GPT 生成请假记录摘要
 async def generate_leave_summary(leave_records):
     leave_summary = [

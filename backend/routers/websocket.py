@@ -278,6 +278,10 @@ def check_missing_fields(data: dict):
 
 def check_error(data: dict):
     try:
+
+        data["start_datetime"] = data["start_datetime"].replace("/", "-")
+        data["end_datetime"] = data["end_datetime"].replace("/", "-")
+
         st_dt = datetime.strptime(data["start_datetime"], "%Y-%m-%d %H:%M")
         ed_dt = datetime.strptime(data["end_datetime"], "%Y-%m-%d %H:%M")
 
@@ -324,6 +328,10 @@ def generate_confirmation_message(data: dict):
 def save_leave_record(data: dict, emp_id: str, db: Session):
     # 获取员工信息
     employee = db.query(Employee).filter(Employee.emp_id == emp_id).first()
+
+    data["start_datetime"] = data["start_datetime"].replace("/", "-")
+    data["end_datetime"] = data["end_datetime"].replace("/", "-")
+
     # 解析时间
     start_datetime = datetime.strptime(data["start_datetime"], "%Y-%m-%d %H:%M")
     end_datetime = datetime.strptime(data["end_datetime"], "%Y-%m-%d %H:%M")

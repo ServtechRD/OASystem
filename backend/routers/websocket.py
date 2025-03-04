@@ -80,12 +80,14 @@ async def leave_websocket(websocket: WebSocket, db: Session = Depends(get_db)):
 
             reqlist = []
             if "***" in user_input:
+                print("is ****")
                 reqlist = get_pending_leave_requests(emp_id, db)
                 if len(reqlist) > 0:
                     await websocket.send_text("下屬請假申請:")
                     response = await generate_leave_summary(leave_records)
                     await websocket.send_text(response)
             else:
+                print("normal query")
                 if "查詢" in user_input and "請假" in user_input:
                     # 查询已请假记录
                     leave_records = query_leave_records(emp_id, db)

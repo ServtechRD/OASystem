@@ -84,7 +84,7 @@ async def leave_websocket(websocket: WebSocket, db: Session = Depends(get_db)):
                 reqlist = get_pending_leave_requests(emp_id, db)
                 if len(reqlist) > 0:
                     await websocket.send_text("下屬請假申請:")
-                    response = await generate_leave_summary(leave_records)
+                    response = await generate_leave_summary(reqlist)
                     await websocket.send_text(response)
             else:
                 print("normal query")

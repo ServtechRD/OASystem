@@ -12,7 +12,7 @@ import holidays
 import os
 
 from dotenv import load_dotenv
-from datetime import datetime, timedelta  
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -296,7 +296,7 @@ def check_error(data: dict):
                 return {"error": f"請假區間內包含週末 ({current_date})，請確認"}
             if current_date in tw_holidays:
                 return {"error": f"請假區間內包含國定假日 ({current_date}: {tw_holidays[current_date]})，請確認"}
-            current_date += datetime.timedelta(days=1)
+            current_date = current_date + timedelta(days=1)
 
 
     except ValueError:
@@ -371,7 +371,7 @@ def save_leave_record(data: dict, emp_id: str, db: Session):
             break
 
         # 进入下一天
-        current_date += timedelta(days=1)
+        current_date = current_date + timedelta(days=1)
         start_datetime = datetime.combine(current_date, work_start_time)  # 设定新的一天的开始时间
 
     # 批量插入数据库

@@ -26,8 +26,6 @@ class Employee(Base):
 
 
 
-
-
 class EmployeeSupervisor(Base):
     __tablename__ = "employee_supervisors"
     id = Column(Integer, primary_key=True, index=True)

@@ -164,7 +164,7 @@ const AttendanceSystem = () => {
   };
 
   const handleSendStart = () => {
-    if (wsRef.current && newMessage.trim()) {
+    if (wsRef.current) {
       wsRef.current.send(
         JSON.stringify({
           message: "***" + "@@" + user.emp_id + "@@",

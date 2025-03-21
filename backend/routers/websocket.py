@@ -1,7 +1,7 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from openai import OpenAI
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, select
+from sqlalchemy import and_, or_, select
 from database import get_db
 from models import LeaveRecord, Employee, EmployeeSupervisor
 from utils import verify_access_token
@@ -30,6 +30,28 @@ history = [
 user_history = {}
 
 user_confirm = {}
+
+
+def generate_time_prompt():
+    today = datetime.today()
+    weekday = today.weekday()  # 0 = Monday, 4 = Friday
+
+    # 计算相对时间
+    date_mappings = {
+        "今天": today.strftime("%Y-%m-%d"),
+        "明天": (today + timedelta(days=1)).strftime("%Y-%m-%d"),
+        "後天": (today + timedelta(days=2)).strftime("%Y-%m-%d"),
+        "這周五": (today + timedelta(days=(4 - weekday) if weekday <= 4 else (4 - weekday + 7))).strftime("%Y-%m-%d")
+    }
+
+    # 生成提示文本
+    prompt = f"今天是 {date_mappings['今天']}，星期{['一', '二', '三', '四', '五', '六', '日'][weekday]}。\n"
+    prompt += "請基於當前時間解析以下自然語言的日期：\n"
+    for key, value in date_mappings.items():
+        prompt += f"- \"{key}\" = {value}\n"
+    prompt += "如果遇到類似的時間表達方式, 請進行同樣的轉換,並在後續回答中使用解析後的日期"
+
+    return prompt
 
 
 async def get_emp_id_from_token(websocket: WebSocket) -> Optional[str]:
@@ -109,6 +131,8 @@ async def leave_websocket(websocket: WebSocket, db: Session = Depends(get_db)):
                     if len(reqlist) > 0:
                         msg = approve_all_leave_requests(emp_id, db)
                         await websocket.send_text(msg)
+                elif "取消" in user_input and "請假" in user_input:
+                    leave_records = query_leave_records(emp_id, db)
                 else:
                     # 处理请假申请或其他逻辑
                     response = await process_leave_request(user_input, emp_id, db)
@@ -221,6 +245,28 @@ async def generate_leave_summary(leave_records):
     return response.choices[0].message.content
 
 
+def check_leave_exists(db: Session, emp_id: str, leave_date: datetime):
+    """
+    检查员工是否在指定日期已有请假记录
+    """
+    # 获取该日期的 00:00:00 和 23:59:59
+    day_start = datetime(leave_date.year, leave_date.month, leave_date.day, 0, 0, 0)
+    day_end = datetime(leave_date.year, leave_date.month, leave_date.day, 23, 59, 59)
+
+    # 查询是否已有当天的请假记录
+    existing_leave = db.query(LeaveRecord).filter(
+        LeaveRecord.emp_id == emp_id,
+        LeaveRecord.status.in_(["requested", "approved"]),  # 只检查已申请或已批准的
+        or_(
+            and_(LeaveRecord.start_datetime >= day_start, LeaveRecord.start_datetime <= day_end),
+            and_(LeaveRecord.end_datetime >= day_start, LeaveRecord.end_datetime <= day_end),
+            and_(LeaveRecord.start_datetime <= day_start, LeaveRecord.end_datetime >= day_end)  # 覆盖整天的情况
+        )
+    ).first()
+
+    return existing_leave is not None  # 返回 True 表示已有请假记录，False 表示没有
+
+
 # 处理请假申请
 async def process_leave_request(user_input: str, emp_id: str, db: Session):
     his = []
@@ -238,7 +284,7 @@ async def process_leave_request(user_input: str, emp_id: str, db: Session):
     if missing_fields:
         return extracted_data  # f"缺少以下資訊：{', '.join(missing_fields)}，請補充。"
     else:
-        error_msg = check_error(extracted_data)
+        error_msg = check_error(extracted_data, emp_id, db)
 
         if len(error_msg) == 0:
             confirmation_message = generate_confirmation_message(extracted_data)
@@ -252,6 +298,8 @@ async def process_leave_request(user_input: str, emp_id: str, db: Session):
 # 提取请假信息（保持不变）
 async def extract_leave_info(user_input: str, his):
     his.append({"role": "user", "content": user_input})
+    time_prompt = generate_time_prompt()
+    his.append({"role": "system", "content": time_prompt})
     print(his)
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
@@ -275,7 +323,7 @@ def check_missing_fields(data: dict):
     return [field for field in required_fields if field not in data or not data[field]]
 
 
-def check_error(data: dict):
+def check_error(data: dict, emp_id: str, db: Session):
     try:
 
         data["start_datetime"] = data["start_datetime"].replace("/", "-")
@@ -286,6 +334,11 @@ def check_error(data: dict):
 
         if st_dt > ed_dt:
             return f"請假開始時間必須早於結束時間"
+
+        if check_leave_exists(db, emp_id, st_dt):
+            return f"{data['start_datetime']}已請假,請先取消或檢查請假日期"
+        if check_leave_exists(db, emp_id, ed_dt):
+            return f"{data['end_datetime']}已請假,請先取消或檢查請假日期"
 
         current_date = st_dt
 
@@ -301,6 +354,8 @@ def check_error(data: dict):
 
     except ValueError:
         return f"日期格式錯誤，請使用 YYYY-MM-DD HH:MM 格式"
+    except Exception:
+        return f"輸入有錯,請重新輸入"
     return ""
 
 

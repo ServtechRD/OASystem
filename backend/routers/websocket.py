@@ -307,8 +307,9 @@ async def process_leave_request(user_input: str, emp_id: str, db: Session):
         his.append(history[0])
 
     extracted_data = await extract_leave_info(user_input, his)
+    print(f"get {extracted_data}")
     missing_fields = check_missing_fields(extracted_data)
-
+    print(f"miss fields :{missing_fields}")
     logger.info(f"請假欄位處理:{extracted_data}")
 
     logger.info(f"缺少欄位:{missing_fields}")
@@ -402,7 +403,7 @@ def parse_extracted_info(extracted_info: str) -> dict:
     将 GPT 的输出解析为 Python 字典。
     假设返回格式为 JSON。
     """
-    extracted_info = extracted_info.replace("```json","").replace("```","")
+    extracted_info = extracted_info.replace("```json", "").replace("```", "")
     try:
         return json.loads(extracted_info)
     except json.JSONDecodeError as e:

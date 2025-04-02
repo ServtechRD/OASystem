@@ -133,6 +133,12 @@ async def leave_websocket(websocket: WebSocket, db: Session = Depends(get_db)):
                         await websocket.send_text(msg)
                 elif "取消" in user_input and "請假" in user_input:
                     leave_records = query_leave_records(emp_id, db)
+                    if not leave_records:
+                        await websocket.send_text("您目前尚未有任何請假記錄。")
+                    else:
+                        # 使用 GPT 生成自然语言回复
+                        response = await generate_leave_summary(leave_records)
+                        await websocket.send_text("要取消那一筆?" + response)
                 else:
                     # 处理请假申请或其他逻辑
                     response = await process_leave_request(user_input, emp_id, db)

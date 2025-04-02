@@ -339,9 +339,11 @@ async def extract_leave_info(user_input: str, his):
 
 # 检查缺失字段（保持不变）
 def check_missing_fields(data: dict):
-    required_fields = ["leave_type", "start_datetime", "end_datetime"]
-    return [field for field in required_fields if field not in data or not data[field]]
-
+    try:
+        required_fields = ["leave_type", "start_datetime", "end_datetime"]
+        return [field for field in required_fields if field not in data or not data[field]]
+    except Exception:
+        return f"資訊不足"
 
 def check_error(data: dict, emp_id: str, db: Session):
     try:

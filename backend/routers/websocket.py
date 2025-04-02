@@ -165,7 +165,7 @@ async def leave_websocket(websocket: WebSocket, db: Session = Depends(get_db)):
                     # 处理请假申请或其他逻辑
                     response = await process_leave_request(user_input, emp_id, db)
                     print(f"get response {response}")
-                    await websocket.send_text(response)
+                    await websocket.send_text(str(response))
 
             # Process natural language with GPT
             # response = await process_with_gpt(data, user_data)

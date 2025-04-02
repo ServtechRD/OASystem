@@ -402,6 +402,7 @@ def parse_extracted_info(extracted_info: str) -> dict:
     将 GPT 的输出解析为 Python 字典。
     假设返回格式为 JSON。
     """
+    extracted_info = extracted_info.replace("```json","").replace("```","")
     try:
         return json.loads(extracted_info)
     except json.JSONDecodeError as e:

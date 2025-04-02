@@ -317,7 +317,9 @@ async def process_leave_request(user_input: str, emp_id: str, db: Session):
     if missing_fields:
         return extracted_data  # f"缺少以下資訊：{', '.join(missing_fields)}，請補充。"
     else:
+        print("start to check error")
         error_msg = check_error(extracted_data, emp_id, db)
+        print(f"error message {error_msg}")
 
         if len(error_msg) == 0:
             confirmation_message = generate_confirmation_message(extracted_data)
@@ -365,12 +367,15 @@ def check_error(data: dict, emp_id: str, db: Session):
 
         logger.info(f"檢查錯誤:{data}")
 
+        print(f"start to check {data}")
+
         data["start_datetime"] = data["start_datetime"].replace("/", "-")
         data["end_datetime"] = data["end_datetime"].replace("/", "-")
 
         st_dt = datetime.strptime(data["start_datetime"], "%Y-%m-%d %H:%M")
         ed_dt = datetime.strptime(data["end_datetime"], "%Y-%m-%d %H:%M")
 
+        print(f"get datetime")
         if st_dt > ed_dt:
             return f"請假開始時間必須早於結束時間"
 
@@ -378,6 +383,8 @@ def check_error(data: dict, emp_id: str, db: Session):
             return f"{data['start_datetime']}已請假,請先取消或檢查請假日期"
         if check_leave_exists(db, emp_id, ed_dt):
             return f"{data['end_datetime']}已請假,請先取消或檢查請假日期"
+
+        print(f"check weekday and holiday")
 
         current_date = st_dt
 

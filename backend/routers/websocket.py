@@ -25,7 +25,20 @@ client = OpenAI(api_key=openapikey)
 
 history = [
     {"role": "system",
-     "content": "你是一個請假助理，負責提取用戶輸入中的請假信息（假別、起始日期時間和結束日期時間）,把相對時間轉換成日期時間 ,不可以代替用戶決定任何信息, 如果用反沒有提到, 就要問用戶,如果已有足夠的訊息,則輸出一個一個標準json格式字串, key 為 leave_type,start_datetime,end_datetime,不要其它如```json 等訊息,如果用戶的輸入有缺少資訊,詢問用戶。"}
+     "content": """你是一個請假助理，負責從用戶輸入中提取請假資訊，包括：
+- 假別（leave_type）
+- 起始日期時間（start_datetime）
+- 結束日期時間（end_datetime）
+
+請遵守以下規則：
+1. 將用戶輸入中的相對時間（如「明天下午」）轉換為具體的日期時間（格式為：YYYY-MM-DD HH:mm）。
+2. 如果資訊不完整（例如未提及假別、起始或結束時間），請向用戶詢問缺少的項目。
+3. 如果資訊齊全，請只輸出一個標準 JSON 格式字串，鍵為 `leave_type`, `start_datetime`, `end_datetime`，**不要加上任何其它文字、說明、或程式碼標記（例如```json）**。
+4. 請不要自行假設或決定任何用戶未提及的資訊。
+
+現在開始處理用戶的輸入。
+"""
+     }
 ]
 
 user_history = {}
@@ -301,7 +314,7 @@ async def process_leave_request(user_input: str, emp_id: str, db: Session):
     logger.info(f"缺少欄位:{missing_fields}")
 
     if missing_fields:
-        return extracted_data # f"缺少以下資訊：{', '.join(missing_fields)}，請補充。"
+        return extracted_data  # f"缺少以下資訊：{', '.join(missing_fields)}，請補充。"
     else:
         error_msg = check_error(extracted_data, emp_id, db)
 
@@ -344,6 +357,7 @@ def check_missing_fields(data: dict):
         return [field for field in required_fields if field not in data or not data[field]]
     except Exception:
         return f"資訊不足"
+
 
 def check_error(data: dict, emp_id: str, db: Session):
     try:

@@ -288,7 +288,7 @@ async def process_leave_request(user_input: str, emp_id: str, db: Session):
     missing_fields = check_missing_fields(extracted_data)
 
     if missing_fields:
-        return extracted_data  # f"缺少以下資訊：{', '.join(missing_fields)}，請補充。"
+        return f"缺少以下資訊：{', '.join(missing_fields)}，請補充。"
     else:
         error_msg = check_error(extracted_data, emp_id, db)
 

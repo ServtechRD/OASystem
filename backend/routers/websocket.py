@@ -13,6 +13,7 @@ import os
 
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+import logging
 
 load_dotenv()
 
@@ -30,6 +31,8 @@ history = [
 user_history = {}
 
 user_confirm = {}
+
+logger = logging.getLogger("uvicorn")
 
 
 def generate_time_prompt():
@@ -102,6 +105,7 @@ async def leave_websocket(websocket: WebSocket, db: Session = Depends(get_db)):
             reqlist = []
             if "***" in user_input:
                 print("is ****")
+                logger.info("=>下屬請假查詢")
                 reqlist = get_pending_leave_requests(emp_id, db)
                 if len(reqlist) > 0:
                     await websocket.send_text("下屬請假申請:")
@@ -110,6 +114,7 @@ async def leave_websocket(websocket: WebSocket, db: Session = Depends(get_db)):
             else:
                 print("normal query")
                 if "查詢" in user_input and "請假" in user_input:
+                    logger.info("=>查詢請假")
                     # 查询已请假记录
                     leave_records = query_leave_records(emp_id, db)
                     if not leave_records:
@@ -119,6 +124,7 @@ async def leave_websocket(websocket: WebSocket, db: Session = Depends(get_db)):
                         response = await generate_leave_summary(leave_records)
                         await websocket.send_text(response)
                 elif "確認" in user_input and "請假" in user_input:
+                    logger.info("=>確認請假")
                     if emp_id in user_confirm and len(user_confirm[emp_id]) > 0:
                         save_leave_record(user_confirm[emp_id], emp_id, db)
                         msg = generate_confirmation_message(user_confirm[emp_id])
@@ -127,11 +133,13 @@ async def leave_websocket(websocket: WebSocket, db: Session = Depends(get_db)):
                     else:
                         await websocket.send_text("您目前尚無要確認的請假")
                 elif "同意" in user_input and "請假" in user_input:
+                    logger.info("=>同意請假")
                     reqlist = get_pending_leave_requests(emp_id, db)
                     if len(reqlist) > 0:
                         msg = approve_all_leave_requests(emp_id, db)
                         await websocket.send_text(msg)
                 elif "取消" in user_input and "請假" in user_input:
+                    logger.info("=>取消請假")
                     leave_records = query_leave_records(emp_id, db)
                     if not leave_records:
                         await websocket.send_text("您目前尚未有任何請假記錄。")
@@ -140,6 +148,7 @@ async def leave_websocket(websocket: WebSocket, db: Session = Depends(get_db)):
                         response = await generate_leave_summary(leave_records)
                         await websocket.send_text("要取消那一筆?" + response)
                 else:
+                    logger.info("=>處理請假")
                     # 处理请假申请或其他逻辑
                     response = await process_leave_request(user_input, emp_id, db)
                     await websocket.send_text(response)
@@ -287,6 +296,10 @@ async def process_leave_request(user_input: str, emp_id: str, db: Session):
     extracted_data = await extract_leave_info(user_input, his)
     missing_fields = check_missing_fields(extracted_data)
 
+    logger.info(f"請假欄位處理:{extracted_data}")
+
+    logger.info(f"缺少欄位:{missing_fields}")
+
     if missing_fields:
         return f"缺少以下資訊：{', '.join(missing_fields)}，請補充。"
     else:
@@ -319,6 +332,7 @@ async def extract_leave_info(user_input: str, his):
 
     his.append({"role": "assistant", "content": extracted_info})
 
+    logger.info(f"助理回復:{extracted_info}")
     print(extracted_info)
     return parse_extracted_info(extracted_info)
 
@@ -331,6 +345,8 @@ def check_missing_fields(data: dict):
 
 def check_error(data: dict, emp_id: str, db: Session):
     try:
+
+        logger.info(f"檢查錯誤:{data}")
 
         data["start_datetime"] = data["start_datetime"].replace("/", "-")
         data["end_datetime"] = data["end_datetime"].replace("/", "-")

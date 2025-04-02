@@ -143,6 +143,7 @@ async def leave_websocket(websocket: WebSocket, db: Session = Depends(get_db)):
                         msg = generate_confirmation_message(user_confirm[emp_id])
                         await websocket.send_text(f"已提出請假申請\n {msg}")
                         user_confirm[emp_id] = {}
+                        user_history[emp_id] = []  # clear old  record
                     else:
                         await websocket.send_text("您目前尚無要確認的請假")
                 elif "同意" in user_input and "請假" in user_input:
@@ -328,7 +329,10 @@ async def process_leave_request(user_input: str, emp_id: str, db: Session):
             # save_leave_record(extracted_data, emp_id, db)  # 保存记录
             return f"請假資訊確認：\n{confirmation_message}, 如果資訊正確, 請回覆確認請假,提出請假申請"
         else:
-            return error_msg
+            try:
+                return json.loads(error_msg)["error"]
+            except Exception:
+                return error_msg
 
 
 # 提取请假信息（保持不变）

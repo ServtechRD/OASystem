@@ -301,7 +301,7 @@ async def process_leave_request(user_input: str, emp_id: str, db: Session):
     logger.info(f"缺少欄位:{missing_fields}")
 
     if missing_fields:
-        return f"缺少以下資訊：{', '.join(missing_fields)}，請補充。"
+        return extracted_data # f"缺少以下資訊：{', '.join(missing_fields)}，請補充。"
     else:
         error_msg = check_error(extracted_data, emp_id, db)
 

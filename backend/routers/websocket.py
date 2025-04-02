@@ -25,7 +25,7 @@ client = OpenAI(api_key=openapikey)
 
 history = [
     {"role": "system",
-     "content": "你是一個請假助理，負責提取用戶輸入中的請假信息（假別、起始日期時間和結束日期時間）,把相對時間轉換成日期時間 ,不可以代替用戶決定任何信息, 如果用反沒有提到, 就要問用戶,如果已有足夠的訊息,則輸出一個一個json格式, key 為 leave_type,start_datetime,end_datetime,如果用戶的輸入有缺少資訊,詢問用戶。"}
+     "content": "你是一個請假助理，負責提取用戶輸入中的請假信息（假別、起始日期時間和結束日期時間）,把相對時間轉換成日期時間 ,不可以代替用戶決定任何信息, 如果用反沒有提到, 就要問用戶,如果已有足夠的訊息,則輸出一個一個標準json格式, key 為 leave_type,start_datetime,end_datetime,不要其它如```json 等訊息,如果用戶的輸入有缺少資訊,詢問用戶。"}
 ]
 
 user_history = {}
